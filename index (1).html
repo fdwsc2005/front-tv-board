@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conte di Savoia – Front Display</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      cursor: none;
+    }
+
+    /* ── Slide Layer ─────────────────────────────────────── */
+    #slide-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 1.2s ease-in-out;
+      will-change: opacity;
+    }
+
+    .slide.active {
+      opacity: 1;
+    }
+
+    /* ── Video Layer ─────────────────────────────────────── */
+    #video-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease-in-out;
+    }
+
+    #video-layer.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #yt-player {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ── Progress Bar ────────────────────────────────────── */
+    #progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      width: 0%;
+      background: rgba(255, 255, 255, 0.55);
+      z-index: 10;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── Watermark ───────────────────────────────────────── */
+    #watermark {
+      position: fixed;
+      bottom: 14px;
+      right: 20px;
+      z-index: 10;
+      font-family: 'Georgia', serif;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.22);
+      text-transform: uppercase;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="slide-layer"></div>
+
+  <div id="video-layer">
+    <div id="yt-player"></div>
+  </div>
+
+  <div id="progress-bar"></div>
+  <div id="watermark">Conte di Savoia</div>
+
+  <script>
+    // ─────────────────────────────────────────────────────────
+    //  CONFIG — edit these values to change behavior
+    // ─────────────────────────────────────────────────────────
+    const CONFIG = {
+      repoBase:      'https://raw.githubusercontent.com/fdwsc2005/front-tv-board/main/',
+      slideCount:    9,
+      slideDuration: 30000,   // ms per slide (30 seconds)
+      fadeIn:        1200,    // ms — must match CSS transition above
+      videos: [
+        'jJxnZt25lvU',        // video_url.txt
+        'IfyYoVHI6nQ'         // video_url_2.txt
+      ]
+    };
+
+    // ─────────────────────────────────────────────────────────
+    //  STATE
+    // ─────────────────────────────────────────────────────────
+    let ytPlayer      = null;
+    let ytReady       = false;
+    let slideIndex    = 0;
+    let videoIndex    = 0;
+    let slideTimer    = null;
+    let progressAnim  = null;
+    let pendingVideo  = null;   // held if YT not ready yet
+    let videoHasPlayed = false; // tracks if current video ever reached PLAYING
+
+    // ─────────────────────────────────────────────────────────
+    //  BUILD SLIDE ELEMENTS
+    // ─────────────────────────────────────────────────────────
+    const slideLayer = document.getElementById('slide-layer');
+    const slides = [];
+
+    for (let i = 1; i <= CONFIG.slideCount; i++) {
+      const div = document.createElement('div');
+      div.className = 'slide';
+      div.style.backgroundImage = `url(${CONFIG.repoBase}${i}.png)`;
+      slideLayer.appendChild(div);
+      slides.push(div);
+    }
+
+    // Preload all images so first display is instant
+    function preloadImages(callback) {
+      let loaded = 0;
+      const total = CONFIG.slideCount;
+      for (let i = 1; i <= total; i++) {
+        const img = new Image();
+        img.onload = img.onerror = () => {
+          loaded++;
+          if (loaded === total) callback();
+        };
+        img.src = `${CONFIG.repoBase}${i}.png`;
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  PROGRESS BAR
+    // ─────────────────────────────────────────────────────────
+    const progressBar = document.getElementById('progress-bar');
+
+    function startProgress(duration) {
+      progressBar.style.transition = 'none';
+      progressBar.style.width = '0%';
+      // Force reflow before animating
+      void progressBar.offsetWidth;
+      progressBar.style.transition = `width ${duration}ms linear`;
+      progressBar.style.width = '100%';
+    }
+
+    function resetProgress() {
+      progressBar.style.transition = 'none';
+      progressBar.style.width = '0%';
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  SLIDE LOGIC
+    // ─────────────────────────────────────────────────────────
+    function showSlides() {
+      // Hide video layer
+      document.getElementById('video-layer').classList.remove('visible');
+      slideIndex = 0;
+      showSlide(0);
+    }
+
+    function showSlide(idx) {
+      clearTimeout(slideTimer);
+
+      // Fade out all slides, fade in the target
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === idx);
+      });
+
+      startProgress(CONFIG.slideDuration);
+
+      slideTimer = setTimeout(() => {
+        const next = idx + 1;
+        if (next < CONFIG.slideCount) {
+          showSlide(next);
+        } else {
+          // All slides done — play the next video
+          transitionToVideo();
+        }
+      }, CONFIG.slideDuration);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  VIDEO LOGIC
+    // ─────────────────────────────────────────────────────────
+    function transitionToVideo() {
+      clearTimeout(slideTimer);
+      resetProgress();
+
+      const videoId = CONFIG.videos[videoIndex % CONFIG.videos.length];
+      videoIndex++;
+
+      if (ytReady && ytPlayer) {
+        loadAndPlayVideo(videoId);
+      } else {
+        // YT API not ready yet — queue it
+        pendingVideo = videoId;
+      }
+    }
+
+    function loadAndPlayVideo(videoId) {
+      const layer = document.getElementById('video-layer');
+      layer.classList.add('visible');
+
+      // Hide all slides while video plays
+      slides.forEach(s => s.classList.remove('active'));
+
+      videoHasPlayed = false;
+      clearTimeout(slideTimer);
+      ytPlayer.loadVideoById({ videoId: videoId });
+    }
+
+    function onVideoEnded() {
+      // Video done — go back to slides
+      showSlides();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  YOUTUBE IFRAME API
+    // ─────────────────────────────────────────────────────────
+    window.onYouTubeIframeAPIReady = function () {
+      ytPlayer = new YT.Player('yt-player', {
+        videoId: '',
+        playerVars: {
+          autoplay:        1,
+          controls:        0,
+          rel:             0,
+          modestbranding:  1,
+          iv_load_policy:  3,
+          fs:              0,
+          playsinline:     1,
+          disablekb:       1,
+        },
+        events: {
+          onReady: function () {
+            ytReady = true;
+            // If a video was queued while API was loading, play it now
+            if (pendingVideo) {
+              loadAndPlayVideo(pendingVideo);
+              pendingVideo = null;
+            }
+          },
+          onStateChange: function (event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+              videoHasPlayed = true;
+              clearTimeout(slideTimer); // cancel any pending fallback
+            }
+            if (event.data === YT.PlayerState.ENDED) {
+              onVideoEnded();
+            }
+            // Only fall back if video never started playing after 15s
+            if (event.data === YT.PlayerState.BUFFERING && !videoHasPlayed) {
+              clearTimeout(slideTimer);
+              slideTimer = setTimeout(() => {
+                if (!videoHasPlayed) onVideoEnded();
+              }, 15000);
+            }
+          },
+          onError: function () {
+            // On any YT error, skip to slides
+            onVideoEnded();
+          }
+        }
+      });
+    };
+
+    // Inject YouTube IFrame API script
+    const ytScript = document.createElement('script');
+    ytScript.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(ytScript);
+
+    // ─────────────────────────────────────────────────────────
+    //  BOOT
+    // ─────────────────────────────────────────────────────────
+    preloadImages(function () {
+      // Small delay so first slide fades in cleanly
+      setTimeout(showSlides, 400);
+    });
+  </script>
+
+</body>
+</html>
