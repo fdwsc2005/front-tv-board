@@ -120,14 +120,14 @@
     // ─────────────────────────────────────────────────────────
     //  STATE
     // ─────────────────────────────────────────────────────────
-    let ytPlayer      = null;
-    let ytReady       = false;
-    let slideIndex    = 0;
-    let videoIndex    = 0;
-    let slideTimer    = null;
-    let progressAnim  = null;
-    let pendingVideo  = null;   // held if YT not ready yet
-    let videoHasPlayed = false; // tracks if current video ever reached PLAYING
+    let ytPlayer       = null;
+    let ytReady        = false;
+    let slideIndex     = 0;
+    let videoIndex     = 0;
+    let slideTimer     = null;
+    let pendingVideo   = null;  // held if YT not ready yet
+    let videoHasPlayed = false; // true once current video reaches PLAYING
+    let inVideoMode    = false; // true only while we intend to show a video
 
     // ─────────────────────────────────────────────────────────
     //  BUILD SLIDE ELEMENTS
@@ -180,7 +180,9 @@
     //  SLIDE LOGIC
     // ─────────────────────────────────────────────────────────
     function showSlides() {
-      // Hide video layer
+      inVideoMode = false;
+      videoHasPlayed = false;
+      clearTimeout(slideTimer);
       document.getElementById('video-layer').classList.remove('visible');
       slideIndex = 0;
       showSlide(0);
@@ -226,15 +228,20 @@
     }
 
     function loadAndPlayVideo(videoId) {
-      const layer = document.getElementById('video-layer');
-      layer.classList.add('visible');
-
-      // Hide all slides while video plays
-      slides.forEach(s => s.classList.remove('active'));
-
+      inVideoMode    = true;
       videoHasPlayed = false;
       clearTimeout(slideTimer);
+
+      const layer = document.getElementById('video-layer');
+      layer.classList.add('visible');
+      slides.forEach(s => s.classList.remove('active'));
+
       ytPlayer.loadVideoById({ videoId: videoId });
+
+      // Hard fallback: if PLAYING never fires within 20s, skip to slides
+      slideTimer = setTimeout(() => {
+        if (inVideoMode && !videoHasPlayed) onVideoEnded();
+      }, 20000);
     }
 
     function onVideoEnded() {
@@ -268,19 +275,20 @@
             }
           },
           onStateChange: function (event) {
+            // PLAYING — video is live, cancel the startup fallback timer
             if (event.data === YT.PlayerState.PLAYING) {
-              videoHasPlayed = true;
-              clearTimeout(slideTimer); // cancel any pending fallback
+              if (inVideoMode) {
+                videoHasPlayed = true;
+                clearTimeout(slideTimer);
+              }
             }
+            // ENDED — only act on it if we're in video mode AND it actually played
+            // This gates out the spurious ENDED that fires when loadVideoById
+            // is called on an already-initialized player
             if (event.data === YT.PlayerState.ENDED) {
-              onVideoEnded();
-            }
-            // Only fall back if video never started playing after 15s
-            if (event.data === YT.PlayerState.BUFFERING && !videoHasPlayed) {
-              clearTimeout(slideTimer);
-              slideTimer = setTimeout(() => {
-                if (!videoHasPlayed) onVideoEnded();
-              }, 15000);
+              if (inVideoMode && videoHasPlayed) {
+                onVideoEnded();
+              }
             }
           },
           onError: function () {
