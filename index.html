@@ -1,923 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Conte di Savoia — Menu</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#18140F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Conte di Savoia">
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N6LEGGS4LW"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-N6LEGGS4LW');
-</script>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conte di Savoia – Front Display</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  :root {
-    --ink: #18140F;
-    --ink-soft: #6B5E4E;
-    --ink-faint: #9C8E80;
-    --gold: #C9A050;
-    --cream: #FAF6EE;
-    --cream-alt: #F3EDE3;
-    --green: #5A7A4A;
-    --surface: #FFFFFF;
-    --border: rgba(0,0,0,0.09);
-    --border-light: rgba(0,0,0,0.06);
-  }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      cursor: none;
+    }
 
-  html, body {
-    background: var(--cream);
-    font-family: 'DM Sans', sans-serif;
-    color: var(--ink);
-    min-height: 100%;
-  }
+    /* ── Slide Layer ─────────────────────────────────────── */
+    #slide-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
 
-  .wrap {
-    max-width: 520px;
-    margin: 0 auto;
-    background: var(--cream);
-    min-height: 100vh;
-  }
+    .slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 1.2s ease-in-out;
+      will-change: opacity;
+    }
 
-  .hdr {
-    background: var(--ink);
-    padding: 32px 24px 24px;
-    text-align: center;
-  }
-  .hdr-est {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 4px;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .hdr-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 34px;
-    font-weight: 300;
-    color: var(--cream);
-    letter-spacing: 2.5px;
-  }
-  .hdr-sub {
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: #A89880;
-    margin-top: 6px;
-    text-transform: uppercase;
-  }
-  .hdr-rule {
-    width: 28px;
-    height: 1px;
-    background: var(--gold);
-    margin: 14px auto 0;
-  }
+    .slide.active {
+      opacity: 1;
+    }
 
-  .status-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    margin-top: 12px;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1px;
-  }
-  .status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .status-dot.open { background: #6DBF82; box-shadow: 0 0 6px #6DBF82; }
-  .status-dot.closed { background: #C97070; box-shadow: 0 0 6px #C97070; }
-  .status-text.open { color: #6DBF82; }
-  .status-text.closed { color: #C97070; }
+    /* ── Video Layer ─────────────────────────────────────── */
+    #video-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease-in-out;
+    }
 
-  .promo {
-    background: var(--gold);
-    padding: 13px 20px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    color: var(--ink);
-  }
-  .promo strong { font-weight: 700; }
+    #video-layer.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
-  .nav-wrap {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--ink);
-  }
-  .nav {
-    background: var(--ink);
-    display: flex;
-    overflow-x: auto;
-    scrollbar-width: none;
-    border-bottom: 1px solid #2A2520;
-  }
-  .nav::-webkit-scrollbar { display: none; }
+    #yt-player {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
 
-  .nav-hint {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 1px;
-    width: 64px;
-    background: linear-gradient(to right, transparent, #18140F 60%);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 10px;
-    gap: 3px;
-    pointer-events: none;
-    transition: opacity .3s;
-  }
-  .nav-hint-dots { display: flex; gap: 3px; align-items: center; }
-  .nav-hint-dots span {
-    display: block;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: #A89880;
-  }
-  .nav-hint-dots span:nth-child(1) { animation: dot-pulse 1.4s ease-in-out infinite 0s; }
-  .nav-hint-dots span:nth-child(2) { animation: dot-pulse 1.4s ease-in-out infinite .2s; }
-  .nav-hint-dots span:nth-child(3) { animation: dot-pulse 1.4s ease-in-out infinite .4s; }
-  @keyframes dot-pulse {
-    0%, 100% { opacity: .3; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.4); }
-  }
-  .nav-hint.hidden { opacity: 0; }
+    /* ── Progress Bar ────────────────────────────────────── */
+    #progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      width: 0%;
+      background: rgba(255, 255, 255, 0.55);
+      z-index: 10;
+      border-radius: 0 2px 2px 0;
+    }
 
-  .nt {
-    flex-shrink: 0;
-    padding: 14px 16px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: #A89880;
-    cursor: pointer;
-    border: none;
-    background: none;
-    border-bottom: 2px solid transparent;
-    transition: color .18s, border-color .18s;
-    white-space: nowrap;
-  }
-  .nt.on  { color: var(--gold); border-bottom-color: var(--gold); }
-  .nt:hover:not(.on) { color: var(--cream); }
-
-  .content { padding-bottom: 120px; overflow: hidden; }
-  .panel { display: none; animation: fi .22s ease; }
-  .panel.on { display: block; }
-  @keyframes fi { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-
-  .search-wrap {
-    padding: 16px 24px 8px;
-    position: relative;
-  }
-  .search-input {
-    width: 100%;
-    padding: 10px 16px 10px 38px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    outline: none;
-    transition: border-color .18s;
-  }
-  .search-input::placeholder { color: var(--ink-faint); }
-  .search-input:focus { border-color: var(--gold); }
-  .search-icon {
-    position: absolute;
-    left: 36px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 15px;
-    height: 15px;
-    stroke: var(--ink-faint);
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    pointer-events: none;
-  }
-  .search-none {
-    display: none;
-    padding: 24px;
-    text-align: center;
-    font-size: 13px;
-    color: var(--ink-faint);
-    font-style: italic;
-  }
-
-  .tier { background: var(--cream); }
-  .tier.alt { background: var(--cream-alt); }
-
-  .sh {
-    padding: 26px 24px 10px;
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-  .st {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
-    font-weight: 400;
-    color: var(--ink);
-    letter-spacing: .5px;
-    white-space: nowrap;
-  }
-  .sl { flex: 1; height: 1px; background: var(--border); }
-
-  .sp {
-    font-size: 16px;
-    letter-spacing: 1px;
-    color: var(--gold);
-    font-weight: 500;
-    text-transform: uppercase;
-    padding: 0 24px 14px;
-    white-space: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .sp::-webkit-scrollbar { display: none; }
-
-  .item {
-    padding: 13px 24px;
-    border-bottom: 1px solid var(--border-light);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 14px;
-  }
-  .item:last-child { border-bottom: none; }
-  .item.hidden { display: none; }
-  .in {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 17px;
-    font-weight: 500;
-    color: var(--ink);
-    line-height: 1.2;
-    margin-bottom: 3px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .id {
-    font-size: 11.5px;
-    color: var(--ink-soft);
-    font-weight: 300;
-    line-height: 1.45;
-  }
-  .ip {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--gold);
-    white-space: nowrap;
-    padding-top: 2px;
-    text-align: right;
-    flex-shrink: 0;
-    line-height: 1.6;
-  }
-
-  .badge {
-    display: inline-block;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 8.5px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--ink);
-    background: var(--gold);
-    padding: 2px 6px;
-    border-radius: 2px;
-    vertical-align: middle;
-    flex-shrink: 0;
-    line-height: 1.5;
-  }
-
-  .veg {
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .veg svg {
-    width: 13px;
-    height: 13px;
-    stroke: var(--green);
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .callout {
-    margin: 16px 24px;
-    background: var(--ink);
-    border-radius: 4px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .cp {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 28px;
-    color: var(--gold);
-    white-space: nowrap;
-  }
-  .ct {
-    font-size: 10.5px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--cream);
-    margin-bottom: 4px;
-  }
-  .cd { font-size: 11px; color: #A89880; font-weight: 300; line-height: 1.4; }
-
-  .note {
-    font-size: 10px;
-    letter-spacing: 0.5px;
-    color: var(--ink-faint);
-    padding: 0 24px 14px;
-  }
-
-  .veg-legend {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 12px 24px 4px;
-    font-size: 10.5px;
-    color: var(--ink-faint);
-  }
-  .veg-legend svg {
-    width: 12px; height: 12px;
-    stroke: var(--green); fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-  }
-
-  .inquiry {
-    margin: 8px 24px 24px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  .inquiry-title {
-    background: var(--ink);
-    padding: 12px 16px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
-    color: var(--cream);
-  }
-  .inquiry-btns { display: flex; }
-  .inquiry-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 14px 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    text-decoration: none;
-    color: var(--ink);
-    background: var(--cream);
-    border: none;
-    transition: background .18s;
-  }
-  .inquiry-btn:first-child { border-right: 1px solid var(--border); }
-  .inquiry-btn:hover { background: #F0EAE0; }
-  .inquiry-btn svg {
-    width: 15px; height: 15px;
-    stroke: var(--gold); fill: none;
-    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-    flex-shrink: 0;
-  }
-
-  .store-photo {
-    width: 100%;
-    height: 220px;
-    object-fit: cover;
-    object-position: center;
-    display: block;
-  }
-  .info-block { padding: 28px 24px 0; }
-  .info-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 24px;
-    font-weight: 400;
-    color: var(--ink);
-    margin-bottom: 6px;
-  }
-  .info-history {
-    font-size: 13px;
-    color: var(--ink-soft);
-    font-weight: 300;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    font-style: italic;
-  }
-  .info-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border-light);
-  }
-  .info-row:last-child { border-bottom: none; }
-  .info-icon {
-    width: 18px; height: 18px;
-    flex-shrink: 0; margin-top: 1px;
-    stroke: var(--gold); fill: none;
-    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-  }
-  .info-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin-bottom: 3px;
-  }
-  .info-value { font-size: 14px; color: var(--ink); line-height: 1.5; }
-  .info-value a { color: var(--ink); text-decoration: none; }
-  .info-value a:hover { color: var(--gold); }
-
-  .hours-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 3px 16px;
-    font-size: 14px;
-    line-height: 1.6;
-  }
-  .hours-day { color: var(--ink-soft); font-size: 13px; }
-  .hours-time { color: var(--ink); }
-
-  /* App download buttons */
-  .app-btns {
-    display: flex;
-    gap: 10px;
-    margin: 24px 0 0;
-  }
-  .app-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 10px;
-    background: var(--ink);
-    color: var(--cream);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    text-decoration: none;
-    border-radius: 3px;
-    border: 1px solid #2A2520;
-    transition: background .2s, color .2s;
-  }
-  .app-btn:hover { background: var(--gold); color: var(--ink); }
-  .app-btn svg {
-    width: 16px; height: 16px;
-    fill: var(--gold); flex-shrink: 0;
-    transition: fill .2s;
-  }
-  .app-btn:hover svg { fill: var(--ink); }
-
-  .review-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin: 10px 0 0;
-    padding: 14px 20px;
-    background: var(--ink);
-    color: var(--gold);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10.5px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-decoration: none;
-    border-radius: 3px;
-    transition: background .2s, color .2s;
-  }
-  .review-btn:hover { background: var(--gold); color: var(--ink); }
-  .review-btn svg {
-    width: 15px; height: 15px;
-    fill: var(--gold); flex-shrink: 0;
-    transition: fill .2s;
-  }
-  .review-btn:hover svg { fill: var(--ink); }
-
-  .order-bar {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 520px;
-    padding: 12px 24px 28px;
-    background: linear-gradient(to top, var(--cream) 75%, transparent);
-    z-index: 20;
-  }
-  .order-btn {
-    display: block;
-    width: 100%;
-    padding: 15px 24px;
-    background: var(--ink);
-    color: var(--gold);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 3px;
-    border: 1px solid #2A2520;
-    transition: background .2s, color .2s;
-  }
-  .order-btn:hover { background: var(--gold); color: var(--ink); }
-</style>
+    /* ── Watermark ───────────────────────────────────────── */
+    #watermark {
+      position: fixed;
+      bottom: 14px;
+      right: 20px;
+      z-index: 10;
+      font-family: 'Georgia', serif;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.22);
+      text-transform: uppercase;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
 
-  <div class="hdr">
-    <div class="hdr-est">Chicago &nbsp;·&nbsp; Est. 1948</div>
-    <div class="hdr-name">Conte di Savoia</div>
-    <div class="hdr-sub">Italian Specialty Foods</div>
-    <div class="hdr-rule"></div>
-    <div class="status-bar">
-      <div class="status-dot" id="statusDot"></div>
-      <div class="status-text" id="statusText"></div>
-    </div>
+  <div id="slide-layer"></div>
+
+  <div id="video-layer">
+    <div id="yt-player"></div>
   </div>
 
-  <div class="promo"><strong>$5 off your first order</strong> &nbsp;·&nbsp; Earn rewards via our app or website</div>
+  <div id="progress-bar"></div>
+  <div id="watermark">Conte di Savoia</div>
 
-  <div class="nav-wrap">
-    <nav class="nav" id="nav">
-      <button class="nt on" data-tab="cold">Cold Subs</button>
-      <button class="nt" data-tab="hot">Hot Subs</button>
-      <button class="nt" data-tab="soups">Soups &amp; Salads</button>
-      <button class="nt" data-tab="dessert">Dessert &amp; Coffee</button>
-      <button class="nt" data-tab="catering">Catering</button>
-      <button class="nt" data-tab="info">Info</button>
-    </nav>
-    <div class="nav-hint" id="navHint">
-      <div class="nav-hint-dots">
-        <span></span><span></span><span></span>
-      </div>
-    </div>
-  </div>
+  <script>
+    // ─────────────────────────────────────────────────────────
+    //  CONFIG — edit these values to change behavior
+    // ─────────────────────────────────────────────────────────
+    const CONFIG = {
+      repoBase:      'https://raw.githubusercontent.com/fdwsc2005/front-tv-board/main/',
+      slideCount:    7,
+      slideDuration: 30000,   // ms per slide (30 seconds)
+      fadeIn:        1200,    // ms — must match CSS transition above
+      videos: [
+        'jJxnZt25lvU',        // video_url.txt
+        'IfyYoVHI6nQ'         // video_url_2.txt
+      ]
+    };
 
-  <div class="content" id="content">
+    // ─────────────────────────────────────────────────────────
+    //  STATE
+    // ─────────────────────────────────────────────────────────
+    let ytPlayer       = null;
+    let ytReady        = false;
+    let slideIndex     = 0;
+    let videoIndex     = 0;
+    let slideTimer     = null;
+    let pendingVideo   = null;  // held if YT not ready yet
+    let videoHasPlayed = false; // true once current video reaches PLAYING
+    let inVideoMode    = false; // true only while we intend to show a video
 
-    <!-- COLD SUBS -->
-    <div class="panel on" id="tab-cold">
-      <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-input" id="searchInput" type="text" placeholder="Search sandwiches…" autocomplete="off" autocorrect="off" spellcheck="false">
-      </div>
-      <div class="search-none" id="searchNone">No items found</div>
+    // ─────────────────────────────────────────────────────────
+    //  BUILD SLIDE ELEMENTS
+    // ─────────────────────────────────────────────────────────
+    const slideLayer = document.getElementById('slide-layer');
+    const slides = [];
 
-      <div class="tier" id="tier-rustico">
-        <div class="sh"><div class="st">Rustico</div><div class="sl"></div></div>
-        <div class="sp">6" $6.50 &nbsp;·&nbsp; 8" $8 &nbsp;·&nbsp; 12" $12 &nbsp;·&nbsp; 36" $34</div>
-        <div class="item" data-name="italian ham salami capocollo provolone"><div><div class="in">Italian <span class="badge">Popular</span></div><div class="id">Ham, salami, capocollo &amp; provolone</div></div></div>
-        <div class="item" data-name="ham provolone boiled"><div><div class="in">Ham &amp; Provolone</div><div class="id">Boiled ham</div></div></div>
-        <div class="item" data-name="salami provolone genoa"><div><div class="in">Salami &amp; Provolone</div><div class="id">Genoa salami</div></div></div>
-        <div class="item" data-name="capocollo provolone pork spiced salami"><div><div class="in">Capocollo &amp; Provolone</div><div class="id">Pork spiced like salami</div></div></div>
-        <div class="item" data-name="pepperoni provolone sliced sandwich"><div><div class="in">Pepperoni &amp; Provolone</div><div class="id">Sliced sandwich pepperoni</div></div></div>
-        <div class="item" data-name="bologna provolone veal pork"><div><div class="in">Bologna &amp; Provolone</div><div class="id">Veal &amp; pork</div></div></div>
-        <div class="item" data-name="cheese sandwich provolone swiss american cheddar"><div><div class="in">Cheese Sandwich</div><div class="id">Choice of provolone, swiss, american, or cheddar</div></div></div>
-        <div class="item" data-name="canned tuna genova oil"><div><div class="in">Canned Tuna</div><div class="id">Genova tuna in oil</div></div></div>
-      </div>
-
-      <div class="tier alt" id="tier-classico">
-        <div class="sh"><div class="st">Classico</div><div class="sl"></div></div>
-        <div class="sp">6" $7 &nbsp;·&nbsp; 8" $9 &nbsp;·&nbsp; 12" $13 &nbsp;·&nbsp; 36" $37</div>
-        <div class="item" data-name="turkey provolone smoked"><div><div class="in">Turkey &amp; Provolone</div><div class="id">Smoked turkey</div></div></div>
-        <div class="item" data-name="turkey pastrami provolone halal peppered"><div><div class="in">Turkey Pastrami &amp; Provolone</div><div class="id">Halal turkey peppered like pastrami</div></div></div>
-        <div class="item" data-name="chicken provolone deli sliced"><div><div class="in">Chicken &amp; Provolone</div><div class="id">Sliced deli chicken</div></div></div>
-        <div class="item" data-name="mortadella provolone bologna italian"><div><div class="in">Mortadella &amp; Provolone</div><div class="id">Italian bologna</div></div></div>
-        <div class="item" data-name="egg salad sandwich vegetarian"><div><div class="in"><span>Egg Salad Sandwich</span><span class="veg"><svg viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 1 0 18A9 9 0 0 1 12 2z"/><path d="M12 2c0 0-4 4-4 10s4 10 4 10"/><path d="M2 12h20"/></svg></span></div><div class="id">Traditional egg salad</div></div></div>
-        <div class="item" data-name="tuna salad sandwich mayonnaise"><div><div class="in">Tuna Salad Sandwich</div><div class="id">Tuna mixed with mayonnaise</div></div></div>
-        <div class="item" data-name="chicken salad sandwich mayonnaise"><div><div class="in">Chicken Salad Sandwich</div><div class="id">Chicken mixed with mayonnaise</div></div></div>
-      </div>
-
-      <div class="tier" id="tier-maestro">
-        <div class="sh"><div class="st">Maestro</div><div class="sl"></div></div>
-        <div class="sp">6" $8 &nbsp;·&nbsp; 8" $10 &nbsp;·&nbsp; 12" $14 &nbsp;·&nbsp; 36" $40</div>
-        <div class="item" data-name="prosciutto provolone domestic"><div><div class="in">Prosciutto &amp; Provolone</div><div class="id">Domestic prosciutto</div></div></div>
-        <div class="item" data-name="corned beef provolone vienna"><div><div class="in">Corned Beef &amp; Provolone</div><div class="id">Vienna corned beef</div></div></div>
-        <div class="item" data-name="pastrami provolone vienna"><div><div class="in">Pastrami &amp; Provolone</div><div class="id">Vienna pastrami</div></div></div>
-        <div class="item" data-name="roast beef provolone fabbri"><div><div class="in">Roast Beef &amp; Provolone</div><div class="id">Fabbri roast beef</div></div></div>
-        <div class="item" data-name="grilled eggplant vegetarian cold"><div><div class="in"><span>Grilled Eggplant</span><span class="veg"><svg viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 1 0 18A9 9 0 0 1 12 2z"/><path d="M12 2c0 0-4 4-4 10s4 10 4 10"/><path d="M2 12h20"/></svg></span></div><div class="id">Served cold</div></div></div>
-        <div class="item" data-name="caprese mozzarella sun-dried tomato basil vegetarian"><div><div class="in"><span>Caprese</span><span class="veg"><svg viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 1 0 18A9 9 0 0 1 12 2z"/><path d="M12 2c0 0-4 4-4 10s4 10 4 10"/><path d="M2 12h20"/></svg></span> <span class="badge">Popular</span></div><div class="id">Fresh mozzarella, sun-dried tomato &amp; fresh basil</div></div></div>
-        <div class="item" data-name="veggie artichoke eggplant vegetarian"><div><div class="in"><span>Veggie</span><span class="veg"><svg viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 1 0 18A9 9 0 0 1 12 2z"/><path d="M12 2c0 0-4 4-4 10s4 10 4 10"/><path d="M2 12h20"/></svg></span></div><div class="id">Artichoke &amp; chopped pickled eggplant</div></div></div>
-        <div class="item" data-name="natalia grilled eggplant mozzarella red pepper pesto vegetarian"><div><div class="in"><span>The Natalia</span><span class="veg"><svg viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 1 0 18A9 9 0 0 1 12 2z"/><path d="M12 2c0 0-4 4-4 10s4 10 4 10"/><path d="M2 12h20"/></svg></span></div><div class="id">Grilled eggplant, fresh mozzarella, roasted red pepper &amp; pesto</div></div></div>
-        <div class="item" data-name="contessa prosciutto parma mozzarella"><div><div class="in">The Contessa</div><div class="id">Prosciutto di parma and fresh mozzarella</div></div></div>
-        <div class="item" data-name="rosie prosciutto cotto salami coppa hot"><div><div class="in">The Rosie</div><div class="id">Prosciutto cotto, volpi salami &amp; hot coppa</div></div></div>
-      </div>
-
-      <div class="veg-legend"><svg viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 1 0 18A9 9 0 0 1 12 2z"/><path d="M12 2c0 0-4 4-4 10s4 10 4 10"/><path d="M2 12h20"/></svg> Vegetarian</div>
-
-      <div class="callout">
-        <div class="cp">$7.99</div>
-        <div><div class="ct">6" Italian Sub Special</div><div class="cd">Includes Lay's or Jays chips (1 oz) and your choice of 12 oz soda or bottled water</div></div>
-      </div>
-    </div>
-
-    <!-- HOT SUBS -->
-    <div class="panel" id="tab-hot">
-      <div class="sh"><div class="st">Toasted Subs</div><div class="sl"></div></div>
-      <div class="sp">6" $9 &nbsp;·&nbsp; 8" $12 &nbsp;·&nbsp; 12" $15</div>
-      <div class="item"><div><div class="in">The Frank <span class="badge">Popular</span></div><div class="id">Italian w/ fresh mozzarella, sun-dried tomato, basil &amp; balsamic vinegar</div></div></div>
-      <div class="item"><div><div class="in">Italian Beef <span class="badge">Popular</span></div><div class="id">Cheese and/or giardiniera available, extra charge</div></div></div>
-      <div class="item"><div><div class="in">Meatball Sub</div><div class="id">Cheese and/or giardiniera available, extra charge</div></div></div>
-      <div class="item"><div><div class="in">Grilled Panini</div><div class="id">All Rustico, Classico &amp; Maestro options available</div></div><div class="ip">$10</div></div>
-    </div>
-
-    <!-- SOUPS & SALADS -->
-    <div class="panel" id="tab-soups">
-      <div class="sh"><div class="st">Soups &amp; Salads</div><div class="sl"></div></div>
-      <div class="item"><div><div class="in">Chicken Caesar</div><div class="id">Chicken, provolone, tomato, onion, parmesan</div></div><div class="ip">$10.50</div></div>
-      <div class="item"><div><div class="in">House Salad <span class="badge">Popular</span></div><div class="id">Eggplant, artichoke, salami, provolone &amp; olives</div></div><div class="ip">$10.50</div></div>
-      <div class="item"><div><div class="in">Soup of the Day</div><div class="id">Ask your server for today's selection</div></div><div class="ip">S $4.99 &nbsp;·&nbsp; L $6.49</div></div>
-    </div>
-
-    <!-- DESSERT & COFFEE -->
-    <div class="panel" id="tab-dessert">
-      <div class="sh"><div class="st">Desserts</div><div class="sl"></div></div>
-      <div class="item"><div><div class="in">Cannoli <span class="badge">Popular</span></div><div class="id">Tube shell filled with sweet ricotta &amp; nuts</div></div><div class="ip">Mini $1.75 &nbsp;·&nbsp; Reg $3.75</div></div>
-      <div class="item"><div><div class="in">Tiramisu <span class="badge">Popular</span></div><div class="id">Lady finger cake w/ mascarpone &amp; espresso</div></div><div class="ip">$5</div></div>
-      <div class="item"><div><div class="in">Italian Cookies</div><div class="id">Assorted selection</div></div><div class="ip">$14 / lb</div></div>
-      <div class="item"><div><div class="in">Amaretti Cookies</div><div class="id">Italian almond cookies</div></div><div class="ip">$16 / lb</div></div>
-      <div class="sh"><div class="st">Coffee</div><div class="sl"></div></div>
-      <div class="item"><div><div class="in">Cappuccino</div><div class="id">Espresso w/ foam</div></div><div class="ip">S $2.50 &nbsp;·&nbsp; L $4</div></div>
-      <div class="item"><div><div class="in">Latte</div><div class="id">Espresso w/ steamed milk</div></div><div class="ip">S $3 &nbsp;·&nbsp; L $4</div></div>
-      <div class="item"><div><div class="in">Espresso</div></div><div class="ip">Single $2 &nbsp;·&nbsp; Double $3</div></div>
-      <div class="item"><div><div class="in">Coffee</div><div class="id">House blend</div></div><div class="ip">S $2 &nbsp;·&nbsp; L $2.60</div></div>
-    </div>
-
-    <!-- CATERING -->
-    <div class="panel" id="tab-catering">
-      <div class="sh"><div class="st">Sandwich Trays</div><div class="sl"></div></div>
-      <div class="sp">24 pieces (3") &nbsp;·&nbsp; feeds 12–14</div>
-      <div class="item"><div><div class="in">Italian</div><div class="id">Ham, salami, capocollo &amp; provolone</div></div><div class="ip">$74</div></div>
-      <div class="item"><div><div class="in">Ham &amp; Provolone</div><div class="id">Boiled ham</div></div><div class="ip">$72</div></div>
-      <div class="item"><div><div class="in">Turkey &amp; Provolone</div><div class="id">Smoked turkey</div></div><div class="ip">$76</div></div>
-      <div class="item"><div><div class="in">Roast Beef &amp; Provolone</div><div class="id">Fabbri roast beef</div></div><div class="ip">$78</div></div>
-      <div class="item"><div><div class="in">Prosciutto &amp; Provolone</div><div class="id">Domestic prosciutto</div></div><div class="ip">$78</div></div>
-      <div class="item"><div><div class="in">Veggie</div><div class="id">Artichoke &amp; pickled eggplant</div></div><div class="ip">$76</div></div>
-      <div class="item"><div><div class="in">Caprese</div><div class="id">Fresh mozzarella, sun-dried tomato &amp; fresh basil</div></div><div class="ip">$76</div></div>
-
-      <div class="sh"><div class="st">Party Subs</div><div class="sl"></div></div>
-      <div class="sp">3' $72 &nbsp;·&nbsp; 6' $144</div>
-      <div class="note">Extra-wide loaf &nbsp;·&nbsp; feeds 3–4 people per foot</div>
-      <div class="item"><div><div class="in">Italian</div><div class="id">Ham, salami, capocollo &amp; provolone</div></div></div>
-      <div class="item"><div><div class="in">Ham</div><div class="id">Boiled ham</div></div></div>
-      <div class="item"><div><div class="in">Turkey</div><div class="id">Smoked turkey</div></div></div>
-      <div class="item"><div><div class="in">Veggie</div><div class="id">Artichoke &amp; pickled eggplant</div></div></div>
-      <div class="item"><div><div class="in">Caprese</div><div class="id">Fresh mozzarella, sun-dried tomato &amp; fresh basil</div></div></div>
-
-      <div class="sh"><div class="st">Trays &amp; Hot Foods</div><div class="sl"></div></div>
-      <div class="item"><div><div class="in">Vegetable Tray</div><div class="id">Small feeds 12–15 &nbsp;·&nbsp; Large feeds 22–25</div></div><div class="ip">S $39 · L $55</div></div>
-      <div class="item"><div><div class="in">Antipasto Tray</div><div class="id">Small feeds 12–15 &nbsp;·&nbsp; Large feeds 22–25</div></div><div class="ip">S $65 · L $80</div></div>
-      <div class="item"><div><div class="in">Tray of Meatballs</div><div class="id">Feeds 8–10</div></div><div class="ip">$50</div></div>
-      <div class="item"><div><div class="in">Italian Beef w/ Au Jus</div><div class="id">Feeds 8–10</div></div><div class="ip">$52</div></div>
-      <div class="item"><div><div class="in">Sausage &amp; Peppers</div><div class="id">Feeds 8–10</div></div><div class="ip">$52</div></div>
-      <div class="item"><div><div class="in">Lasagna</div><div class="id">Cheese $53 &nbsp;·&nbsp; Spinach $55 &nbsp;·&nbsp; Meat $59 &nbsp;·&nbsp; Feeds 8–10</div></div></div>
-      <div class="item"><div><div class="in">Chicken Parmesan</div><div class="id">Feeds 4–6</div></div><div class="ip">$34</div></div>
-      <div class="item"><div><div class="in">Eggplant Parmesan</div><div class="id">Feeds 8–10</div></div><div class="ip">$52</div></div>
-      <div class="item"><div><div class="in">House Salad Tray</div><div class="id">Small feeds 8–10 &nbsp;·&nbsp; Large feeds 18–20</div></div><div class="ip">S $36 · L $53</div></div>
-
-      <div class="sh"><div class="st">Dessert Trays</div><div class="sl"></div></div>
-      <div class="item"><div><div class="in">Italian Cookie Tray</div></div><div class="ip">$53</div></div>
-      <div class="item"><div><div class="in">Tiramisu Cake</div></div><div class="ip">$47</div></div>
-      <div class="item"><div><div class="in">Mini Pastries</div></div><div class="ip">$72</div></div>
-
-      <div class="inquiry">
-        <div class="inquiry-title">Place a Catering Inquiry</div>
-        <div class="inquiry-btns">
-          <a href="tel:+13126663471" class="inquiry-btn">
-            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            Call Us
-          </a>
-          <a href="mailto:cds1438@gmail.com" class="inquiry-btn">
-            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            Email Us
-          </a>
-        </div>
-      </div>
-      <div style="height:8px"></div>
-    </div>
-
-    <!-- INFO -->
-    <div class="panel" id="tab-info">
-      <img src="store.webp" alt="Conte di Savoia storefront on W. Taylor Street" class="store-photo">
-      <div class="info-block">
-        <div class="info-name">Conte di Savoia</div>
-        <div class="info-history">A Little Italy landmark since 1948. One of Chicago's last authentic Italian specialty grocers — still family-run, still on Taylor Street, still making sandwiches the old way.</div>
-
-        <div class="info-row">
-          <svg class="info-icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <div>
-            <div class="info-label">Address</div>
-            <div class="info-value">
-              <a href="https://www.google.com/maps/place/Conte+Di+Savoia/@41.8695576,-87.6658145,17z/data=!3m1!4b1!4m6!3m5!1s0x880e2d1b88e4f6b7:0x3b7731236338a102!8m2!3d41.8695576!4d-87.6632396!16s%2Fg%2F1tm135km?entry=ttu" target="_blank">
-                1438 W. Taylor Street<br>Chicago, IL 60607
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-row">
-          <svg class="info-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <div>
-            <div class="info-label">Hours</div>
-            <div class="info-value">
-              <div class="hours-grid">
-                <span class="hours-day">Mon – Sat</span><span class="hours-time">9:00 am – 6:00 pm</span>
-                <span class="hours-day">Sunday</span><span class="hours-time">9:00 am – 4:00 pm</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-row">
-          <svg class="info-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          <div>
-            <div class="info-label">Phone</div>
-            <div class="info-value"><a href="tel:+13126663471">(312) 666-3471</a></div>
-          </div>
-        </div>
-
-        <div class="info-row">
-          <svg class="info-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <div>
-            <div class="info-label">Email</div>
-            <div class="info-value"><a href="mailto:cds1438@gmail.com">cds1438@gmail.com</a></div>
-          </div>
-        </div>
-
-        <div class="info-row">
-          <svg class="info-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <div>
-            <div class="info-label">Website</div>
-            <div class="info-value"><a href="https://www.contedisavoia.com" target="_blank">contedisavoia.com</a></div>
-          </div>
-        </div>
-
-        <!-- App download buttons -->
-        <div class="app-btns">
-          <a href="https://apps.apple.com/us/app/conte-di-savoia/id950129357" target="_blank" class="app-btn">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-            App Store
-          </a>
-          <a href="https://play.google.com/store/apps/details?id=com.chownow.contes" target="_blank" class="app-btn">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3.18 23.76c.3.17.64.22.97.15l11.37-11.37-2.55-2.55L3.18 23.76zM20.73 9.91l-2.55-1.47-2.85 2.85 2.85 2.85 2.57-1.48c.73-.42.73-1.33-.02-1.75zM2.1 1.04C2.04 1.2 2 1.38 2 1.58v20.84c0 .2.04.38.1.54l.09.08L13.56 11.57v-.14L2.19.96l-.09.08zM13.97 8.05l-2.85-2.85-8.15-4.7 9.73 9.73 1.27-2.18z"/></svg>
-            Google Play
-          </a>
-        </div>
-
-        <a href="https://www.google.com/maps/place/Conte+Di+Savoia/@41.8695576,-87.6632396,17z/data=!4m8!3m7!1s0x880e2d1b88e4f6b7:0x3b7731236338a102!8m2!3d41.8695576!4d-87.6632396!9m1!1b1!16s%2Fg%2F1tm135km?hl=en&entry=ttu" target="_blank" class="review-btn">
-          <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Leave Us a Google Review
-        </a>
-
-      </div>
-      <div style="height:32px"></div>
-    </div>
-
-  </div>
-</div>
-
-<div class="order-bar">
-  <a href="https://order.chownow.com/order/1800/locations?add_cn_ordering_class=true" class="order-btn">Order Now</a>
-</div>
-
-<script>
-  // Register service worker for PWA
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/restaurant-menu/sw.js');
-  }
-
-  // Open/Closed status
-  (function() {
-    var now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    var day = now.getDay();
-    var time = now.getHours() + now.getMinutes() / 60;
-    var open = day >= 1 && day <= 6 ? time >= 9 && time < 18 : time >= 9 && time < 16;
-    var closeTime = day === 0 ? 'Closes at 4pm' : 'Closes at 6pm';
-    var dot = document.getElementById('statusDot');
-    var txt = document.getElementById('statusText');
-    dot.className = 'status-dot ' + (open ? 'open' : 'closed');
-    txt.className = 'status-text ' + (open ? 'open' : 'closed');
-    txt.textContent = open ? closeTime : 'Closed · Opens 9am';
-  })();
-
-  var tabs = Array.from(document.querySelectorAll('.nt'));
-  var panels = Array.from(document.querySelectorAll('.panel'));
-
-  function switchTab(key) {
-    tabs.forEach(function(b) { b.classList.remove('on'); });
-    panels.forEach(function(p) { p.classList.remove('on'); });
-    var btn = document.querySelector('.nt[data-tab="' + key + '"]');
-    var panel = document.getElementById('tab-' + key);
-    if (btn) btn.classList.add('on');
-    if (panel) panel.classList.add('on');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (key !== 'cold') {
-      document.getElementById('searchInput').value = '';
-      filterItems('');
+    for (let i = 1; i <= CONFIG.slideCount; i++) {
+      const div = document.createElement('div');
+      div.className = 'slide';
+      div.style.backgroundImage = `url(${CONFIG.repoBase}${i}.png)`;
+      slideLayer.appendChild(div);
+      slides.push(div);
     }
-  }
 
-  document.getElementById('nav').addEventListener('click', function(e) {
-    var btn = e.target.closest('.nt');
-    if (!btn) return;
-    switchTab(btn.dataset.tab);
-  });
+    // Preload all images so first display is instant
+    function preloadImages(callback) {
+      let loaded = 0;
+      const total = CONFIG.slideCount;
+      for (let i = 1; i <= total; i++) {
+        const img = new Image();
+        img.onload = img.onerror = () => {
+          loaded++;
+          if (loaded === total) callback();
+        };
+        img.src = `${CONFIG.repoBase}${i}.png`;
+      }
+    }
 
-  var tabOrder = ['cold','hot','soups','dessert','catering','info'];
-  var touchStartX = 0;
-  var touchStartY = 0;
+    // ─────────────────────────────────────────────────────────
+    //  PROGRESS BAR
+    // ─────────────────────────────────────────────────────────
+    const progressBar = document.getElementById('progress-bar');
 
-  document.getElementById('content').addEventListener('touchstart', function(e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
+    function startProgress(duration) {
+      progressBar.style.transition = 'none';
+      progressBar.style.width = '0%';
+      // Force reflow before animating
+      void progressBar.offsetWidth;
+      progressBar.style.transition = `width ${duration}ms linear`;
+      progressBar.style.width = '100%';
+    }
 
-  document.getElementById('content').addEventListener('touchend', function(e) {
-    var dx = e.changedTouches[0].clientX - touchStartX;
-    var dy = e.changedTouches[0].clientY - touchStartY;
-    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
-    var activeBtn = document.querySelector('.nt.on');
-    if (!activeBtn) return;
-    var cur = tabOrder.indexOf(activeBtn.dataset.tab);
-    if (dx < 0 && cur < tabOrder.length - 1) switchTab(tabOrder[cur + 1]);
-    if (dx > 0 && cur > 0) switchTab(tabOrder[cur - 1]);
-  }, { passive: true });
+    function resetProgress() {
+      progressBar.style.transition = 'none';
+      progressBar.style.width = '0%';
+    }
 
-  function filterItems(query) {
-    var q = query.toLowerCase().trim();
-    var items = document.querySelectorAll('#tab-cold .item');
-    var tiers = ['tier-rustico','tier-classico','tier-maestro'];
-    var anyVisible = false;
-    items.forEach(function(item) {
-      var name = (item.getAttribute('data-name') || '').toLowerCase();
-      var text = item.textContent.toLowerCase();
-      var match = !q || name.indexOf(q) > -1 || text.indexOf(q) > -1;
-      item.classList.toggle('hidden', !match);
-      if (match) anyVisible = true;
+    // ─────────────────────────────────────────────────────────
+    //  SLIDE LOGIC
+    // ─────────────────────────────────────────────────────────
+    function showSlides() {
+      inVideoMode = false;
+      videoHasPlayed = false;
+      clearTimeout(slideTimer);
+      document.getElementById('video-layer').classList.remove('visible');
+      slideIndex = 0;
+      showSlide(0);
+    }
+
+    function showSlide(idx) {
+      clearTimeout(slideTimer);
+
+      // Fade out all slides, fade in the target
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === idx);
+      });
+
+      startProgress(CONFIG.slideDuration);
+
+      slideTimer = setTimeout(() => {
+        const next = idx + 1;
+        if (next < CONFIG.slideCount) {
+          showSlide(next);
+        } else {
+          // All slides done — play the next video
+          transitionToVideo();
+        }
+      }, CONFIG.slideDuration);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  VIDEO LOGIC
+    // ─────────────────────────────────────────────────────────
+    function transitionToVideo() {
+      clearTimeout(slideTimer);
+      resetProgress();
+
+      const videoId = CONFIG.videos[videoIndex % CONFIG.videos.length];
+      videoIndex++;
+
+      if (ytReady && ytPlayer) {
+        loadAndPlayVideo(videoId);
+      } else {
+        // YT API not ready yet — queue it
+        pendingVideo = videoId;
+      }
+    }
+
+    function loadAndPlayVideo(videoId) {
+      inVideoMode    = true;
+      videoHasPlayed = false;
+      clearTimeout(slideTimer);
+
+      const layer = document.getElementById('video-layer');
+      layer.classList.add('visible');
+      slides.forEach(s => s.classList.remove('active'));
+
+      ytPlayer.loadVideoById({ videoId: videoId });
+
+      // Hard fallback: if PLAYING never fires within 20s, skip to slides
+      slideTimer = setTimeout(() => {
+        if (inVideoMode && !videoHasPlayed) onVideoEnded();
+      }, 20000);
+    }
+
+    function onVideoEnded() {
+      // Video done — go back to slides
+      showSlides();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  YOUTUBE IFRAME API
+    // ─────────────────────────────────────────────────────────
+    window.onYouTubeIframeAPIReady = function () {
+      ytPlayer = new YT.Player('yt-player', {
+        videoId: '',
+        playerVars: {
+          autoplay:        1,
+          controls:        0,
+          rel:             0,
+          modestbranding:  1,
+          iv_load_policy:  3,
+          fs:              0,
+          playsinline:     1,
+          disablekb:       1,
+        },
+        events: {
+          onReady: function () {
+            ytReady = true;
+            // If a video was queued while API was loading, play it now
+            if (pendingVideo) {
+              loadAndPlayVideo(pendingVideo);
+              pendingVideo = null;
+            }
+          },
+          onStateChange: function (event) {
+            // PLAYING — video is live, cancel the startup fallback timer
+            if (event.data === YT.PlayerState.PLAYING) {
+              if (inVideoMode) {
+                videoHasPlayed = true;
+                clearTimeout(slideTimer);
+              }
+            }
+            // ENDED — only act on it if we're in video mode AND it actually played
+            // This gates out the spurious ENDED that fires when loadVideoById
+            // is called on an already-initialized player
+            if (event.data === YT.PlayerState.ENDED) {
+              if (inVideoMode && videoHasPlayed) {
+                onVideoEnded();
+              }
+            }
+          },
+          onError: function () {
+            // On any YT error, skip to slides
+            onVideoEnded();
+          }
+        }
+      });
+    };
+
+    // Inject YouTube IFrame API script
+    const ytScript = document.createElement('script');
+    ytScript.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(ytScript);
+
+    // ─────────────────────────────────────────────────────────
+    //  BOOT
+    // ─────────────────────────────────────────────────────────
+    preloadImages(function () {
+      // Small delay so first slide fades in cleanly
+      setTimeout(showSlides, 400);
     });
-    tiers.forEach(function(id) {
-      var tier = document.getElementById(id);
-      if (!tier) return;
-      tier.style.display = tier.querySelectorAll('.item:not(.hidden)').length > 0 ? '' : 'none';
-    });
-    document.getElementById('searchNone').style.display = (q && !anyVisible) ? 'block' : 'none';
-  }
+  </script>
 
-  document.getElementById('searchInput').addEventListener('input', function() {
-    filterItems(this.value);
-  });
-
-  var nav = document.getElementById('nav');
-  var hint = document.getElementById('navHint');
-  nav.addEventListener('scroll', function() {
-    hint.classList.toggle('hidden', nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 8);
-  });
-</script>
 </body>
 </html>
